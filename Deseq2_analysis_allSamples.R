@@ -1,4 +1,6 @@
 library(DESeq2)
+library(pcaExplorer)
+source("/home/pg/Documents/Shared-Win10/github_repository/precursors/Utilis.R")
 ddsTxi <- readRDS(file = "/home/pg/Documents/Shared-Win10/github_repository/precursors/ddsTxi_allSamples.rds")
 ### Annotation of ensembl ID
 
@@ -8,15 +10,6 @@ names = as.vector(colData(ddsTxi)$Cell)
 ### Excluding low expressed genes
 ddsTxi_expressed = ExpressedGenes_by_fpkm_dds(ddsTxi,name=names,threshold = 1);ddsTxi_expressed #### 12520 genes
 ddsTxi_expressed = DESeq(ddsTxi_expressed,parallel=T,test="LRT",full= ~ batch + Cell,reduce= ~ batch)
-
-##### GEO
-fpkm = as.data.frame(fpkm(ddsTxi_expressed))
-colnames(fpkm) <- colData(ddsTxi_expressed)$new.name
-fpkm$genes <- mcols(ddsTxi_expressed)$SYMBOL
-fpkm$gene_name <- mcols(ddsTxi_expressed)$gene_name
-View(as.data.frame(colData(ddsTxi_expressed)))
-
-WriteXLS::WriteXLS(fpkm,ExcelFileName="/home/pg/Documents/Shared-Win10/GEO_Data_Submission/Neutrophils_precursors/smartseq/FPKM.xls",row.names="TRUE")
 
 ### Getting differential expressed genes
 res = results(ddsTxi_expressed)
@@ -31,7 +24,7 @@ de <- rownames(res_sig)
 ######## PCA analysis
 vsd = vst(ddsTxi, blind=T) ###### set blind TRUE
 mat <- assay(vsd)
-batch = vsd$RUN
+batch = vsd$batch
 mod <- model.matrix(~ Cell, colData(ddsTxi))
 mat <- limma::removeBatchEffect(mat, batch=batch,design=mod)
 assay(vsd) <- mat
@@ -47,15 +40,15 @@ HCL_OLO = function(dds,genes,ntop,exclude=NULL){
   dds <- dds[, !(colnames(dds) %in% exclude)]
   dds <- dds[genes,]
   dds$Cell = droplevels(dds$Cell)
-  dds$RUN = droplevels(dds$RUN)
-  dds$Donor = droplevels(dds$Donor)
+  dds$batch = droplevels(dds$batch)
+  dds$donor = droplevels(dds$donor)
   rld  <- vst(dds, blind=T)
   mod <- model.matrix(~ Cell, colData(dds))
   mat <- assay(rld)
-  batch = rld$RUN
+  batch = rld$batch
   mat <- limma::removeBatchEffect(mat, batch=batch,batch2 = NULL,design=mod)
   assay(rld) <- mat
-  colnames(rld) = paste(colData(rld)$Cell,colData(rld)$order,"#",colData(rld)$Donor,sep=" ")
+  colnames(rld) = dds$SampleNames
   rv <- rowVars(assay(rld))
   select <- order(rv, decreasing = TRUE)[seq_len(min(ntop,length(rv)))]
   mat <- assay(rld)[select, ]
@@ -223,26 +216,17 @@ normalization <-function(x){
 ddsTxi_expressed_sig = ddsTxi_expressed[rownames(ddsTxi_expressed)%in%rownames(res_sig),]
 selectedGenes = GetTopVariableGenes(ddsTxi_expressed_sig,ntop=2800) #### 2789.8 genes
 groups = colData(ddsTxi_expressed)$Cell
-# geni_Interesanty <- c("MYC","FLT3","CD34","SOX4","KIT","HLA-DRB1","HLA-DRB5","IRF8","RPS3A","RPS6","RPL3","RPL7",
-#                       "ATP5F1A","IDH2","SSBP1","TOMM6","CEBPE","GFI1","FUT4","LYZ","LTF","LCN2","CEACAM8","MPO","AZU1",
-#                       "PRTN3","ELANE","CXCR1","CXCR2","FCGR3B","IFITM1","IRF1","IFIT2","ARG1","MMP9","MMP25",
-#                       "CD177","OASL","ISG15","RSAD2","IFIT1","IFIT3","CSF3R","CXCL8","MX1","MME","CEBPB","CYBA","CYBB",
-#                       "HLA-DRA","HLA-DPB1","HOXA9","TOP2A", "MKI67","NFKBIA", "NFKB2","NFKBIZ", "CXCL8","IL1B", "LTB")
-
 geni_Interesanty <- c("MYC","FLT3","CD34","SOX4","KIT","HLA-DRB1","HLA-DRB5","IRF8","RPS3A","RPS6","RPL3",
                       "TOMM6","CEBPE","GFI1","LYZ","LTF","LCN2","CEACAM8","MPO","AZU1",
                       "ELANE","CXCR1","CXCR2","FCGR3B","IFITM1","ARG1","MMP9","MMP25",
                       "CD177","ISG15","IFIT1","CSF3R","CXCL8","MX1","MME","CEBPB","CYBA","CYBB",
                       "HLA-DRA","HLA-DPB1","HOXA9","TOP2A", "MKI67","NFKBIA", "NFKB2","CXCL8","IL1B",
                       "MRPL1","MTCH2")
-sort(geni_Interesanty)
 
 Res_Sig = data.frame(res_sig,order=1:nrow(res_sig))
 Res_Sig[match(geni_Interesanty,Res_Sig$SYMBOL),] %>% arrange(order)
 
 data = PlotMediansHeatmap(ddsTxi_expressed,genes=rownames(selectedGenes),groups=groups,res=res)
-
-data[match(geni_Interesanty,data$SYMBOL),]
 
 x = data[,1:11]
 rownames(x) = data$SYMBOL
