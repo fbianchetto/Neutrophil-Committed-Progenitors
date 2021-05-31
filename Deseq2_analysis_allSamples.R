@@ -1,7 +1,13 @@
 library(DESeq2)
 library(pcaExplorer)
-source("/home/pg/Documents/Shared-Win10/github_repository/precursors/Utilis.R")
-ddsTxi <- readRDS(file = "/home/pg/Documents/Shared-Win10/github_repository/precursors/ddsTxi_allSamples.rds")
+source("/home/simple/Documents/Shared-Win10/github_repository/precursors/Utilis.R")
+ddsTxi <- readRDS(file = "/home/simple/Documents/Shared-Win10/github_repository/precursors/ddsTxi_allSamples.rds")
+colData(ddsTxi) = data
+data$Cell = as.factor(data$Cell)
+data$batch = as.factor(data$batch)
+data$donor = as.factor(data$donor)
+estimateSizeFactors(ddsTxi)
+saveRDS(ddsTxi,file = "/home/simple/Documents/Shared-Win10/github_repository/precursors/ddsTxi_allSamples.rds")
 ### Annotation of ensembl ID
 
 ddsTxi = Coding_Filtering(ddsTxi,version="http://apr2019.archive.ensembl.org") #### 27674  genes, 48 samples
@@ -87,7 +93,7 @@ Median_values <- function(dds,groups){
   data <- fpkm[order(rownames(fpkm)), ] ### sort first
   data = data[!duplicated(rownames(fpkm)),] ### Keep lowest fdr
   data = as.data.frame(round(medianMatrix(data,groups),2))
-  data = data[,c("HSC","N0","N1","N2","N3","PM","M","MM","BC","SC","PMN")]
+  data = data[,c("HSC","NM1","NM2","NM3","NM4","PM","M","MM","BC","SC","PMN")]
   return(data)
 }
 
@@ -99,10 +105,10 @@ colnames(data) <- c("geneID","cells","expr")
 table(data$cells)
 data$order =as.numeric(data$cells)
 data$order = as.numeric(gsub('HSC','1',data$order))
-data$order = as.numeric(gsub('N0','2',data$order))
-data$order = as.numeric(gsub('N1','3',data$order))
-data$order = as.numeric(gsub('N2','4',data$order))
-data$order = as.numeric(gsub('N3','5',data$order))
+data$order = as.numeric(gsub('NM1','2',data$order))
+data$order = as.numeric(gsub('NM2','3',data$order))
+data$order = as.numeric(gsub('NM3','4',data$order))
+data$order = as.numeric(gsub('NM4','5',data$order))
 data$order = as.numeric(gsub('PMN','11',data$order))
 data$order = as.numeric(gsub('MM','8',data$order))
 data$order = as.numeric(gsub('PM','9',data$order))
@@ -182,13 +188,13 @@ normalization <-function(x){
 PlotMediansHeatmap <- function(dds,genes,groups,res){
   fpkm = DESeq2::fpkm(dds)
   fpkm = as.data.frame(round(medianMatrix(fpkm,groups),2))
-  fpkm = fpkm[,c("HSC","N0","N1","N2","N3","PM","M","MM","BC","SC","PMN")]
+  fpkm = fpkm[,c("HSC","NM1","NM2","NM3","NM4","PM","M","MM","BC","SC","PMN")]
   max <- apply(fpkm, 1, max)
   dataLog = as.matrix(log2(fpkm[, 1:11] + 1))
   #z <- t(scale(t(dataLog), scale=TRUE, center=TRUE)) #Z transformation
   z = as.matrix(normalization(dataLog)) #Z transformation
   df = data.frame(z,mean= rowMeans(z),sd = rowSds(z),max=max)
-  df  = df [,c("HSC","N0","N1","N2","N3","PM","M","MM","BC","SC","PMN","mean","sd","max")]
+  df  = df [,c("HSC","NM1","NM2","NM3","NM4","PM","M","MM","BC","SC","PMN","mean","sd","max")]
   data = data.frame(df,fdr=res$padj,SYMBOL=mcols(dds)$SYMBOL,gene_name=mcols(dds)$gene_name,gene_biotype=mcols(dds)$gene_biotype,fpkm)
   data = subset(data,rownames(data)%in%genes)
   data <- data[order(data$SYMBOL, abs(data$fdr) ), ] ### sort first
