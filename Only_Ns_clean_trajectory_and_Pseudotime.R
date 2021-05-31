@@ -12,8 +12,7 @@ cluster_col <- c("0" = "#E41A1C",#
                  "7" = "#F781BF",
                  "8" =  "#999999")
 ####################################
-
-source("/media/pg/Volume2_4T/RNA_SEQ_our/SingleCells/SingleCellsUtils.R")
+source("/media/simple/Volume2_4T/RNA_SEQ_our/SingleCells/SingleCells_functions/SingleCellsUtils.R")
 library(Seurat)
 library(destiny)
 library(RColorBrewer)
@@ -21,8 +20,7 @@ library(RColorBrewer)
 colors = c("#737373","#969696","#BDBDBD","#D9D9D9","#FEE0D2", "#FCBBA1", "#FC9272", "#FB6A4A", "#EF3B2C", "#CB181D", "#99000D","#8C2D04") ### grey and reds scale
 
 options(future.globals.maxSize = 20000 * 1024^2)
-source("/media/pg/Volume2_4T/RNA_SEQ_our/SingleCells/SingleCellsUtils.R")
-Ns = readRDS(file = "/home/pg/RNA_SEQ_our/SingleCells/Rhapsody/precursors/IntegrationSamples/RDS_files/BMs.integrated.Ns.clean_50PC_Mt_CC.rds")
+Ns = readRDS(file = "/media/simple/Volume2_4T/RNA_SEQ_our/SingleCells/Rhapsody/precursors/IntegrationSamples/Paper_RDS_files/BMs.integrated.Ns.clean_50PC_Mt_CC.rds")
 DimPlot(Ns,label=T,reduction = "umap_learn50PC")
 length(Ns@assays$integrated@var.features)
 
@@ -45,7 +43,7 @@ dev.off()
 DefaultAssay(Ns) <- "RNA"
 Ns <- NormalizeData(Ns,verbose = FALSE)
 VlnPlot(Ns,features = c("TOP2A","TUBB"),pt.size = 0)
-FeaturePlot(Ns,features = c("TOP2A","TUBB"),reduction = "umap_learn30PC")
+FeaturePlot(Ns,features = c("TOP2A","TUBB"),reduction = "umap_learn50PC")
 
 Primary_granules = list(c("ACPP","AZU1","BPI","CD63","CECAM6","CTSG","DEFA3","DEFA4","ELANE","GLA","GLB1","GNS","HEXA","MAN2B1","MPO","PRTN3","VNN1"))
 Secondary_granules = list(c("ITGAM","LTF","C3AR1","CECAM1","CLE5CA","GGH","OLFM4","PTX3","TSPAN14"))
@@ -116,7 +114,7 @@ cairo_ps(file="/home/pg/Dropbox/Precursors/CoralDrawFigures/NewCoreldraw/FigS7_G
 multiplot(pG_AG,v1,pG_SG,v2,pG_GG,v3,cols = 3)
 dev.off()
  
-cc.genes <- readLines(con = "/media/pg/Volume2_4T/RNA_SEQ_our/SingleCells/10XGenomics/regev_lab_cell_cycle_genes.txt")
+cc.genes <- readLines(con = "/media/simple/Volume2_4T/RNA_SEQ_our/SingleCells/10XGenomics/regev_lab_cell_cycle_genes.txt")
 s.genes <- list(cc.genes[1:43])
 g2m.genes <- list(cc.genes[44:97])
 
@@ -352,8 +350,9 @@ dev.off()
 
 ####################################################
 ######## Re-intetration of NMs population     ######
-source("/media/pg/Volume2_4T/RNA_SEQ_our/SingleCells/SingleCellsUtils.R")
-Ns = readRDS(file = "/home/pg/RNA_SEQ_our/SingleCells/Rhapsody/precursors/IntegrationSamples/RDS_files/BMs.integrated.Ns.clean_50PC_Mt_CC.rds")
+###### 
+source("/media/simple/Volume2_4T/RNA_SEQ_our/SingleCells/SingleCells_functions/SingleCellsUtils.R")
+Ns = readRDS(file = "/media/simple/Volume2_4T/RNA_SEQ_our/SingleCells/Rhapsody/precursors/IntegrationSamples/Paper_RDS_files/BMs.integrated.Ns.clean_50PC_Mt_CC.rds")
 
 DefaultAssay(Ns) <- "RNA"
 Ns <- DietSeurat(Ns, assays = "RNA")
@@ -376,11 +375,10 @@ Ns.anchors <- FindIntegrationAnchors(object.list = Ns.list, normalization.method
                                      anchor.features = Ns.features, reference = reference_dataset,dims = 1:30) ##
 all_features = lapply(Ns.list,row.names) %>% Reduce(intersect, .)
 Ns.integrated <- IntegrateData(anchorset = Ns.anchors, normalization.method = "SCT", verbose = FALSE,features.to.integrate=all_features, dims = 1:30)###
-saveRDS(Ns.integrated, file = "/home/pg/RNA_SEQ_our/SingleCells/Rhapsody/precursors/IntegrationSamples/RDS_files/precursors.BMs.integrated_contaminants_clean_Ns.var_Mt_CC_allGenes_50PC_Genes.rds")
-
+saveRDS(Ns.integrated, file = "/media/simple/Volume2_4T/RNA_SEQ_our/SingleCells/Rhapsody/precursors/IntegrationSamples/Paper_RDS_files/precursors.BMs.integrated_contaminants_clean_Ns.var_Mt_CC_allGenes_50PC_Genes.rds")
 ###########################################################
 ##### Read Integrated DataSet
-Ns = readRDS(file = "/home/pg/RNA_SEQ_our/SingleCells/Rhapsody/precursors/IntegrationSamples/RDS_files/precursors.BMs.integrated_contaminants_clean_Ns.var_Mt_CC_allGenes_50PC_Genes.rds")
+Ns = readRDS(file = "/media/simple/Volume2_4T/RNA_SEQ_our/SingleCells/Rhapsody/precursors/IntegrationSamples/Paper_RDS_files/precursors.BMs.integrated_contaminants_clean_Ns.var_Mt_CC_allGenes_50PC_Genes.rds")
 head(Ns@meta.data)
 Idents(Ns)
 
@@ -490,16 +488,12 @@ dev.off()
 #######################################################################################################
 #### Pseudotime and trajectory analysis
 ######### Destiny
+library(destiny)
 DefaultAssay(Ns)  <- "integrated"
 Ns$Cells = Idents(Ns)
+
 #Ns = FindVariableFeatures(Ns)
 length(VariableFeatures(Ns))
-top10 <- head(VariableFeatures(Ns), 10)
-
-# plot variable features with and without labels
-plot1 <- VariableFeaturePlot(Ns)
-plot2 <- LabelPoints(plot = plot1, points = top10, repel = TRUE)
-plot1 + plot2
 
 Log_Ns_SC = GetAssayData(object = Ns, slot = "data")
 Log_Ns_SC = Log_Ns_SC[VariableFeatures(Ns)[1:2000],]
@@ -512,17 +506,21 @@ cellLabels <- Idents(Ns)
 colnames(Log_Ns_SC) <- cellLabels
 dm <- destiny::DiffusionMap(sc_norm)
 meta.data = Ns@meta.data
+saveRDS(dm, file = "/media/simple/Volume2_4T/RNA_SEQ_our/SingleCells/Rhapsody/precursors/IntegrationSamples/Paper_RDS_files/precursors.dm.BMs.integrated_contaminants_clean_Ns.var_Mt_CC_allGenes_50PC_Genes.rds")
+dm = readRDS(file = "/media/simple/Volume2_4T/RNA_SEQ_our/SingleCells/Rhapsody/precursors/IntegrationSamples/Paper_RDS_files/precursors.dm.BMs.integrated_contaminants_clean_Ns.var_Mt_CC_allGenes_50PC_Genes.rds")
 
-saveRDS(dm, file = "/home/pg/RNA_SEQ_our/SingleCells/Rhapsody/precursors/IntegrationSamples/RDS_files/precursors.dm.BMs.integrated_contaminants_clean_Ns.var_Mt_CC_allGenes_50PC_Genes.rds")
-dm = readRDS(file = "/home/pg/RNA_SEQ_our/SingleCells/Rhapsody/precursors/IntegrationSamples/RDS_files/precursors.dm.BMs.integrated_contaminants_clean_Ns.var_Mt_CC_allGenes_50PC_Genes.rds")
+
+df <- data.frame(DC1 = eigenvectors(dm)[, 1], DC2 = eigenvectors(dm)[, 2],cell_type2 = Idents(Ns))
+df <- droplevels(df)
+p3 <- ggplot(df) + geom_point(aes(x = DC1, y = DC2, color = cell_type2),size=1); p3
+
 
 idx = which(rownames(meta.data)=="342260_1")
-
 head(Ns@meta.data)
-DimPlot(Ns,reduction = "umap_learn30PC")
+
 dpt <- destiny::DPT(dm,tips=idx)
-saveRDS(dpt, file = "/home/pg/RNA_SEQ_our/SingleCells/Rhapsody/precursors/IntegrationSamples/RDS_files/precursors.dpt.BMs.integrated_contaminants_clean_Ns.var_Mt_CC_allGenes_50PC_Genes.rds")
-dpt = readRDS(file = "/home/pg/RNA_SEQ_our/SingleCells/Rhapsody/precursors/IntegrationSamples/RDS_files/precursors.dpt.BMs.integrated_contaminants_clean_Ns.var_Mt_CC_allGenes_50PC_Genes.rds")
+saveRDS(dpt, file = "/media/simple/Volume2_4T/RNA_SEQ_our/SingleCells/Rhapsody/precursors/IntegrationSamples/Paper_RDS_files/precursors.dpt.BMs.integrated_contaminants_clean_Ns.var_Mt_CC_allGenes_50PC_Genes.rds")
+dpt = readRDS(file = "/media/simple/Volume2_4T/RNA_SEQ_our/SingleCells/Rhapsody/precursors/IntegrationSamples/Paper_RDS_files/precursors.dpt.BMs.integrated_contaminants_clean_Ns.var_Mt_CC_allGenes_50PC_Genes.rds")
 
 # Plot DC1 vs DC2 and color the cells by their inferred diffusion pseudotime.
 # We can accesss diffusion pseudotime via dpt$dpt.
@@ -537,11 +535,9 @@ p
 ###### from https://github.com/satijalab/seurat/issues/1475
 tmp <- data.matrix(data.frame(DC1 = eigenvectors(dm)[, 1],
                               DC2 = eigenvectors(dm)[, 2]))
-tmp2 = tmp[order(tmp$DC2),]
 
 ### load the original Ns seurat object
-Ns = readRDS(file = "/home/pg/RNA_SEQ_our/SingleCells/Rhapsody/precursors/IntegrationSamples/RDS_files/BMs.integrated.Ns.clean_50PC_Mt_CC.rds")
-
+Ns = readRDS(file = "/media/simple/Volume2_4T/RNA_SEQ_our/SingleCells/Rhapsody/precursors/IntegrationSamples/Paper_RDS_files/BMs.integrated.Ns.clean_50PC_Mt_CC.rds")
 
 rownames(tmp) <- colnames(Ns)
 Ns[["dm"]] <- CreateDimReducObject(embeddings = tmp, key="DC_", assay=DefaultAssay(Ns))
@@ -549,6 +545,47 @@ DimPlot(Ns, reduction="dm")
 
 Ns$pseudotime_dpt <- rank(dpt$dpt)
 v <- VlnPlot(Ns,features = "pseudotime_dpt",pt.size = 0) +
+  stat_summary(fun.y = median, geom='point', size = 25, colour = "black", shape = 95)#  + coord_flip()
+v
+
+Idents(Ns) <- Ns$Sample_Name
+table(Idents(Ns))
+DimPlot(Ns, reduction="dm")
+
+cMOP_c = DimPlot(Ns, reduction="umap_learn50PC",cells.highlight=WhichCells(Ns,idents="cMOP"))
+N0_c = DimPlot(Ns, reduction="umap_learn50PC",cells.highlight=WhichCells(Ns,idents="NM1"))
+N1_c = DimPlot(Ns, reduction="umap_learn50PC",cells.highlight=WhichCells(Ns,idents="NM2"))
+N2_c = DimPlot(Ns, reduction="umap_learn50PC",cells.highlight=WhichCells(Ns,idents="NM3"))
+N3_c = DimPlot(Ns, reduction="umap_learn50PC",cells.highlight=WhichCells(Ns,idents="NM4"))
+
+multiplot(cMOP_c,N0_c,N1_c,N2_c,N3_c,cols = 2)
+
+
+VlnPlot(Ns,features=c("IRF8","CSF1R","CSF3R","MPO"),pt.size = 0)
+source("/media/simple/Volume2_4T/RNA_SEQ_our/SingleCells/SingleCells_functions/SingleCellsUtils.R")
+
+source("/media/simple/Volume2_4T/RNA_SEQ_our/SingleCells/SingleCells_functions/methods.R")
+source("/media/simple/Volume2_4T/RNA_SEQ_our/SingleCells/SingleCells_functions/plotting.R")
+source("/media/simple/Volume2_4T/RNA_SEQ_our/SingleCells/SingleCells_functions/helpers.R")
+source("/media/simple/Volume2_4T/RNA_SEQ_our/SingleCells/SingleCells_functions/kde.R")
+
+plot_density(Ns,"IRF8",reduction="umap_learn50PC")
+
+v <- VlnPlot(Ns,features = "pseudotime_dpt",pt.size = 0) +
+  stat_summary(fun.y = median, geom='point', size = 25, colour = "black", shape = 95)#  + coord_flip()
+v
+
+Ns_subset = subset(Ns,idents="cMOP",invert=T)
+v <- VlnPlot(Ns_subset,features = "pseudotime_dpt",pt.size = 0) +
+  stat_summary(fun.y = median, geom='point', size = 25, colour = "black", shape = 95)#  + coord_flip()
+v
+
+DimPlot(Ns_subset, reduction="dm")
+
+my_levels <- c("NM1","NM2","NM3","NM4");length(my_levels) ### 0.4
+Ns_subset@active.ident <- factor(x=Ns_subset@active.ident,levels = my_levels)
+
+v <- VlnPlot(Ns_subset,features = "pseudotime_dpt",pt.size = 0) +
   stat_summary(fun.y = median, geom='point', size = 25, colour = "black", shape = 95)#  + coord_flip()
 v
 
@@ -596,7 +633,7 @@ exp = data.frame(DC1 = eigenvectors(dm)[,1],
 DefaultAssay(Ns) <- "RNA"
 Ns <- NormalizeData(Ns)
 Ns$pseudotime_dpt <- rank(dpt$dpt)
-p1 <- FeaturePlot(Ns,features = "pseudotime_dpt",reduction = "umap_learn30PC")
+p1 <- FeaturePlot(Ns,features = "pseudotime_dpt",reduction = "umap_learn50PC")
 
 colors = c("#D9D9D9","#FFF5F0","#FEE0D2","#FCBBA1","#FC9272","#FB6A4A","#EF3B2C","#CB181D","#99000D","#8C2D04") ### grey and reds scale
 exp = data.frame(FetchData(object = Ns, vars = c("CD34","ELANE","CTSG","ident"),slot = "data"),
@@ -839,10 +876,10 @@ my_destinyPlot <- function(df,label=NULL){
 my_destinyPlot(tmp,label = "0")
 table(tmp$Clusters)
 
-p1 <- my_destinyPlot(tmp,label = "0") # 6
-p2 <- my_destinyPlot(tmp,label = "1") # 3
-p3 <- my_destinyPlot(tmp,label = "3") # 4
-p4 <- my_destinyPlot(tmp,label = "4") # 2
+p1 <- my_destinyPlot(tmp,label = "0")
+p2 <- my_destinyPlot(tmp,label = "1")
+p3 <- my_destinyPlot(tmp,label = "3")
+p4 <- my_destinyPlot(tmp,label = "4")
 
 multiplot(p1,p2,p3,p4,cols = 2)
 
