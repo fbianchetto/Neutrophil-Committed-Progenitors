@@ -3,13 +3,18 @@
 #####################################################################
 
 #Load packages
-source("/media/pg/Volume2_4T/RNA_SEQ_our/SingleCells/SingleCellsUtils.R")
+source("/media/simple/Volume2_4T/RNA_SEQ_our/SingleCells/SingleCells_functions/SingleCellsUtils.R")
 options(future.globals.maxSize = 20000 * 1024^2)
 library(Seurat)
 library(ggplot2)
 library(scater)
 library(SingleR)
 library(RColorBrewer)
+reticulate::py_config()
+library(reticulate)
+conda_create("r-reticulate")
+reticulate::py_install(envname="envs", packages ='umap-learn')
+reticulate::py_install(envname="envs", packages ='numpy')
 
 MyUMAPPlot <- function(seurat,label=NULL,donors=NULL){
   library(ggthemes)
@@ -28,7 +33,7 @@ MyUMAPPlot <- function(seurat,label=NULL,donors=NULL){
 ### Intergrated seurat object     ######
 ########################################
 
-BMs.integrated = readRDS(file = "/home/pg/RNA_SEQ_our/SingleCells/Rhapsody/precursors/IntegrationSamples/RDS_files/precursors.integrated_BD_p1_p99_Mt_CC_genes.rds")
+BMs.integrated = readRDS(file = "/media/simple/Volume2_4T/RNA_SEQ_our/SingleCells/Rhapsody/precursors/IntegrationSamples/Paper_RDS_files/precursors.integrated_BD_p1_p99_Mt_CC_genes.rds")
 BMs.integrated <- RunPCA(BMs.integrated, verbose = FALSE,npcs = 50)
 #### Use elbow plot to define number of dimensions
 ElbowPlot(BMs.integrated,ndims = 50)
@@ -36,7 +41,6 @@ print(BMs.integrated[["pca"]], dims = 1:50, nfeatures = 20)
 DimHeatmap(BMs.integrated, dims = 1:12, cells = 500, balanced = TRUE)
 #### Run UMAP
 BMs.integrated <- RunUMAP(BMs.integrated,dims = 1:50,reduction.name = "umap_learn50PC",reduction.key = "UMAPLearn50PC_",umap.method="umap-learn",metric = "correlation")
-
 #### Plot UMAP
 p1 <- DimPlot(object = BMs.integrated,
               reduction = 'umap_learn50PC',label = FALSE,
@@ -210,9 +214,7 @@ p1 <- multiplot(cl0,cl1,cl2,
 
 ########################################
 Idents(BMs.integrated) <-"Clusters_k_20_res_0.3"
-#saveRDS(BMs.integrated, file = "/home/pg/RNA_SEQ_our/SingleCells/Rhapsody/precursors/IntegrationSamples/RDS_files/BMs.integrated.50PC_Mt_CC.rds")
-BMs.integrated <- readRDS(file = "/home/pg/RNA_SEQ_our/SingleCells/Rhapsody/precursors/IntegrationSamples/RDS_files/BMs.integrated.50PC_Mt_CC.rds")
-
+BMs.integrated <- readRDS(file = "/media/simple/Volume2_4T/RNA_SEQ_our/SingleCells/Rhapsody/precursors/IntegrationSamples/Paper_RDS_files/BMs.integrated.50PC_Mt_CC.rds")
 #### Figure 6A
 reduction = "umap_learn50PC"
 cluster_col <- c("0" = "#E41A1C",#
@@ -229,10 +231,10 @@ R0.3 <- DimPlot(object = BMs.integrated,reduction = reduction,label = TRUE) + sc
   ggtitle("integrated_snn_res.0.3") + theme(plot.title = element_text(size = 10, face = "bold")) + xlim(-5,12) + ylim(-5,8)
 
 cluster_tag <- c("cMOP" = "#006400",
-                 "N0" = "#E41A1C",
-                 "N1" = "#FDB462",
-                 "N2" = "#87CEEB",
-                 "N3" = "#00008B")
+                 "NM1" = "#E41A1C",
+                 "NM2" = "#FDB462",
+                 "NM3" = "#87CEEB",
+                 "NM4" = "#00008B")
 
 p6 <- DimPlot(object = BMs.integrated,
               reduction = reduction,label = FALSE,
@@ -255,16 +257,17 @@ MyUMAPPlot <- function(seurat,label=NULL,donors=NULL){
   return(p1)
 }
 
-N0 = MyUMAPPlot(BMs.integrated, label="N0")
-N1 = MyUMAPPlot(BMs.integrated, label="N1")
-N2 = MyUMAPPlot(BMs.integrated, label="N2")
-N3 = MyUMAPPlot(BMs.integrated, label="N3")
+
+NM1 = MyUMAPPlot(BMs.integrated, label="NM1")
+NM2 = MyUMAPPlot(BMs.integrated, label="NM2")
+NM3 = MyUMAPPlot(BMs.integrated, label="NM3")
+NM4 = MyUMAPPlot(BMs.integrated, label="NM4")
 cMOPs = MyUMAPPlot(BMs.integrated, label="cMOP")
 
-p1 <- multiplot(N0,N1,N2, N3,cMOPs,cols = 2)
+p1 <- multiplot(NM1,NM2,NM3,NM4,cMOPs,cols = 2)
 
 cairo_ps(file="/home/pg/Dropbox/Precursors/CoralDrawFigures/FigS7B_A_UMAP_all_genes.eps", width = 8, height = 10)
-multiplot(N0,N1,N2, N3,cMOPs,cols = 2)
+multiplot(NM1,NM2,NM3,NM4,cMOPs,cols = 2)
 dev.off()
 
 #############################################################################
@@ -321,11 +324,12 @@ VlnPlot(BMs.integrated,features = platelet,pt.size = 1)
 VlnPlot(BMs.integrated,features = B,pt.size = 0.1)
 VlnPlot(BMs.integrated,features = erythocytes,pt.size = 0.1)
 
-saveRDS(BMs.integrated, file = "/home/pg/RNA_SEQ_our/SingleCells/Rhapsody/precursors/IntegrationSamples/RDS_files/BMs.integrated.clean_50PC_Mt_CC.rds")
+saveRDS(BMs.integrated, file = "/media/simple/Volume2_4T/RNA_SEQ_our/SingleCells/Rhapsody/precursors/IntegrationSamples/Paper_RDS_files/BMs.integrated.clean_50PC_Mt_CC.rds")
 ##########################################################################
 ###### Cleaned data
 ##########################################################################
-BMs.integrated <- readRDS(file = "/home/pg/RNA_SEQ_our/SingleCells/Rhapsody/precursors/IntegrationSamples/RDS_files/BMs.integrated.clean_50PC_Mt_CC.rds")
+BMs.integrated <- readRDS(file = "/media/simple/Volume2_4T/RNA_SEQ_our/SingleCells/Rhapsody/precursors/IntegrationSamples/Paper_RDS_files/BMs.integrated.clean_50PC_Mt_CC.rds")
+
 ##########################################################################
 DefaultAssay(BMs.integrated) = "RNA" ####"integrated"
 BMs.integrated <- NormalizeData(BMs.integrated)
@@ -335,10 +339,10 @@ data.frame(markers %>% group_by(cluster) %>% top_n(n = 10, wt = avg_logFC))
 top10 <- markers %>% group_by(cluster) %>% top_n(n = 10, wt = avg_logFC)
 
 library(WriteXLS)
-WriteXLS::WriteXLS(top10,ExcelFileName = "/home/pg/Documents/Shared-Win10/Dropbox/Precursors/DEGs_all_cluters_Neups_and_cMop.xls")
+WriteXLS::WriteXLS(top10,ExcelFileName = "/media/simple/Volume2_4T/RNA_SEQ_our/SingleCells/Rhapsody/precursors/IntegrationSamples/Paper_RDS_files/DEGs_all_cluters_Neups_and_cMop.xls")
 
 #######
-BMs.integrated <- readRDS(file = "/home/pg/RNA_SEQ_our/SingleCells/Rhapsody/precursors/IntegrationSamples/RDS_files/BMs.integrated.clean_50PC_Mt_CC.rds")
+BMs.integrated <- readRDS(file = "/media/simple/Volume2_4T/RNA_SEQ_our/SingleCells/Rhapsody/precursors/IntegrationSamples/Paper_RDS_files/BMs.integrated.clean_50PC_Mt_CC.rds")
 DefaultAssay(BMs.integrated) <- "RNA"
 
 BMs.integrated = subset(BMs.integrated,idents=c('6'), invert = TRUE)
@@ -384,7 +388,6 @@ pl$C
 cairo_ps(file="/home/pg/Dropbox/Precursors/CoralDrawFigures/NewCoreldraw/ViolinPlots_contaminants.eps", width = 10, height = 10)
 pl$C
 dev.off()
-
 
 ####### Find gene expression markers for clusters 
 markers <- FindAllMarkers(object = BMs.integrated, only.pos = TRUE, min.pct = 0.25, min.diff.pct = -Inf, logfc.threshold = 0.25)
@@ -433,11 +436,32 @@ cairo_ps(file="/home/pg/Dropbox/Precursors/CoralDrawFigures/NewCoreldraw/HCl_euc
 plot(dend2)
 dev.off()
 
+BMs.integrated <- readRDS(file = "/media/simple/Volume2_4T/RNA_SEQ_our/SingleCells/Rhapsody/precursors/IntegrationSamples/Paper_RDS_files/BMs.integrated.clean_50PC_Mt_CC.rds")
+BMs.integrated.clean = subset(BMs.integrated,idents=c('2','5','6','7'), invert = TRUE) #### cell cycle
+
+cairo_ps(file="/home/pg/Dropbox/Precursors/CoralDrawFigures/NewCoreldraw/FigS7B_A_UMAP_all_genes_subclusters_Ns.eps", width = 8, height = 10)
+DimPlot(BMs.integrated.clean,reduction="umap_learn50PC") + scale_color_manual(values=cluster_col) 
+dev.off()
+
+p3 <- DimPlot(BMs.integrated.clean,reduction="umap_learn50PC",pt.size = 0.01) + scale_color_manual(values=cluster_col) 
+p2 <-FeaturePlot(Ns.old,features = "pseudotime_dpt",reduction = "umap_learn50PC",pt.size= 0.2)
+
+multiplot(p3,p2, cols=2)
+
+cairo_ps(file="/home/pg/Dropbox/Precursors/CoralDrawFigures/NewCoreldraw/UMAP_pseudotime.eps", width = 15, height = 6)
+multiplot(p3,p2, cols=2)
+dev.off()
+saveRDS(BMs.integrated.clean, file = "/media/simple/Volume2_4T/RNA_SEQ_our/SingleCells/Rhapsody/precursors/IntegrationSamples/Paper_RDS_files/BMs.integrated.Ns.clean_50PC_Mt_CC.rds")
+
+BMs.integrated.clean = subset(BMs.integrated,idents=c('2','5'), invert = FALSE) #### cell cycle
+DimPlot(BMs.integrated.clean,reduction="umap_learn50PC")
+saveRDS(BMs.integrated.clean, file = "/media/simple/Volume2_4T/RNA_SEQ_our/SingleCells/Rhapsody/precursors/IntegrationSamples/Paper_RDS_files/BMs.integrated.cMOPs.clean_50PC_Mt_CC.rds")
+
 
 # ####### Pseudobulk analysis
 # #### https://hbctraining.github.io/scRNA-seq/lessons/pseudobulk_DESeq2_scrnaseq.html
 #
-BMs.integrated <- readRDS(file = "/home/pg/RNA_SEQ_our/SingleCells/Rhapsody/precursors/IntegrationSamples/RDS_files/BMs.integrated.clean_50PC_Mt_CC.rds")
+BMs.integrated <- readRDS(file = "/media/simple/Volume2_4T/RNA_SEQ_our/SingleCells/Rhapsody/precursors/IntegrationSamples/Paper_RDS_files/BMs.integrated.clean_50PC_Mt_CC.rds")
 
 BMs.c0 = subset(BMs.integrated,idents=c('0'), invert = FALSE)
 BMs.c1 = subset(BMs.integrated,idents=c('1'), invert = FALSE)
