@@ -2,12 +2,6 @@ library(DESeq2)
 library(pcaExplorer)
 source("/home/simple/Documents/Shared-Win10/github_repository/precursors/Utilis.R")
 ddsTxi <- readRDS(file = "/home/simple/Documents/Shared-Win10/github_repository/precursors/ddsTxi_allSamples.rds")
-colData(ddsTxi) = data
-data$Cell = as.factor(data$Cell)
-data$batch = as.factor(data$batch)
-data$donor = as.factor(data$donor)
-estimateSizeFactors(ddsTxi)
-saveRDS(ddsTxi,file = "/home/simple/Documents/Shared-Win10/github_repository/precursors/ddsTxi_allSamples.rds")
 ### Annotation of ensembl ID
 
 ddsTxi = Coding_Filtering(ddsTxi,version="http://apr2019.archive.ensembl.org") #### 27674  genes, 48 samples
