@@ -160,7 +160,7 @@ GO_heatmap = function(data){
 #  return(c)
 }
 
-dir_work = "/media/pg/Volume2_4T/RNA_SEQ_our/Smart-seq2/Patrizia"
+dir_work = "/media/simple/Volume2_4T/RNA_SEQ_our/Smart-seq2/Patrizia"
 setwd(dir_work)
 file = file.path(paste(dir_work,"protein_class_Predicted.tsv",sep="/"))
 
@@ -423,13 +423,13 @@ GOfuncR_converterID <- function(genes,res){
 #GOgenes.Ensembl = GOgenes.Ensembl[GOgenes.Ensembl$go_id != '',]
 #GOgenes.Ensembl = GOgenes.Ensembl[GOgenes.Ensembl$gene_id != '',]
 
-#save(GOgenes.Ensembl, file='/media/pg/Volume2_4T/RNA_SEQ_our/Smart-seq2/Giulia/R_scripts/GOgenes.Ensembl84.rda')
-#save(allGO.Ensembl, file='/media/pg/Volume2_4T/RNA_SEQ_our/Smart-seq2/Giulia/R_scripts/allGO.Ensembl84.rda')
-#save(allgenes.Ensembl, file='/media/pg/Volume2_4T/RNA_SEQ_our/Smart-seq2/Giulia/R_scripts/allgenes.Ensembl84.rda')
+#save(GOgenes.Ensembl, file='/media/simple/Volume2_4T/RNA_SEQ_our/Smart-seq2/Giulia/R_scripts/GOgenes.Ensembl84.rda')
+#save(allGO.Ensembl, file='/media/simple/Volume2_4T/RNA_SEQ_our/Smart-seq2/Giulia/R_scripts/allGO.Ensembl84.rda')
+#save(allgenes.Ensembl, file='/media/simple/Volume2_4T/RNA_SEQ_our/Smart-seq2/Giulia/R_scripts/allgenes.Ensembl84.rda')
 
-load(file='/media/pg/Volume2_4T/RNA_SEQ_our/Smart-seq2/Giulia/R_scripts/GOgenes.Ensembl84.rda')
-load(file='/media/pg/Volume2_4T/RNA_SEQ_our/Smart-seq2/Giulia/R_scripts/allGO.Ensembl84.rda')
-load(file='/media/pg/Volume2_4T/RNA_SEQ_our/Smart-seq2/Giulia/R_scripts/allgenes.Ensembl84.rda')
+load(file='/media/simple/Volume2_4T/RNA_SEQ_our/Smart-seq2/Giulia/R_scripts/GOgenes.Ensembl84.rda')
+load(file='/media/simple/Volume2_4T/RNA_SEQ_our/Smart-seq2/Giulia/R_scripts/allGO.Ensembl84.rda')
+load(file='/media/simple/Volume2_4T/RNA_SEQ_our/Smart-seq2/Giulia/R_scripts/allgenes.Ensembl84.rda')
 
 ##############################
 #' @title Chain topGO and REViGO analyses to produce treemaps
@@ -867,19 +867,19 @@ Coding_Filtering <- function(dds,version){
   print("Getting annotations through biomart library...")
   if (version == v96) {
     print (paste("You are using ensembl version 96, URL",version,sep=" : "))
-    annotation = getBM(attributes=c('ensembl_gene_id','external_gene_name','gene_biotype','description','chromosome_name'),mart = ensembl)
+    annotation = getBM(attributes=c('ensembl_gene_id','external_gene_name','gene_biotype','description','chromosome_name'),mart = ensembl,useCache = FALSE)
     colnames(annotation) = c("ID","SYMBOL","biotype","name","chr")
   } else if (version == us){
     print (paste("You are using the emergency ensembl site, URL",version,sep=" : "))
-    annotation = getBM(attributes=c('ensembl_gene_id','external_gene_name','gene_biotype','description','chromosome_name'),mart = ensembl)
+    annotation = getBM(attributes=c('ensembl_gene_id','external_gene_name','gene_biotype','description','chromosome_name'),mart = ensembl,useCache = FALSE)
     colnames(annotation) = c("ID","SYMBOL","biotype","name","chr")
   } else if (version == v84){
     print (paste("You are using ensembl version 84, URL",version,sep=" : "))
-    annotation = getBM(attributes=c('ensembl_gene_id','external_gene_name','gene_biotype','description','chromosome_name'),mart = ensembl)
+    annotation = getBM(attributes=c('ensembl_gene_id','external_gene_name','gene_biotype','description','chromosome_name'),mart = ensembl,useCache = FALSE)
     colnames(annotation) = c("ID","SYMBOL","biotype","name","chr")
   } else {
     print (paste("You are using ensembl version 74, URL",version, sep=" : "))
-    annotation = getBM(attributes=c('ensembl_gene_id','external_gene_id','gene_biotype','description','chromosome_name'),mart = ensembl)
+    annotation = getBM(attributes=c('ensembl_gene_id','external_gene_id','gene_biotype','description','chromosome_name'),mart = ensembl,useCache = FALSE)
     colnames(annotation) = c("ID","SYMBOL","biotype","name","chr")
   }
   annotation$name = gsub('\\[.*','',annotation$name)
